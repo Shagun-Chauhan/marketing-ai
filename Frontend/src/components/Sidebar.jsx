@@ -13,7 +13,8 @@ import {
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: UserCircle, label: 'Business Profile', path: '/profile' },
-  { icon: Calendar, label: 'Campaign Planner', path: '/campaign' },
+  { icon: Zap, label: 'Campaign Planner', path: '/campaign' },
+  { icon: Calendar, label: 'Calendar Planner', path: '/calendar' },
   { icon: Hash, label: 'Captions & Hashtags', path: '/captions' },
   { icon: BarChart3, label: 'Competitor Analysis', path: '/competitor' },
 ];
