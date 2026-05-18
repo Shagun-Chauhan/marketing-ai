@@ -22,6 +22,7 @@ from services.content_classifier import classify_content_intent
 from services.frequency_analyzer import analyze_frequency_and_patterns
 from services.confidence_scorer import compute_confidence_score
 from services.trend_detector import detect_trend_gaps
+from routes.caption_routes import router as caption_router
 
 # Load environment variables
 load_dotenv()
@@ -40,6 +41,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include caption generator router
+app.include_router(caption_router)
 
 @app.post("/api/analyze-competitor", response_model=FullAnalysisResponse)
 async def analyze_competitor_endpoint(request: AnalysisRequest):
