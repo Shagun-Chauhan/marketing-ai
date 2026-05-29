@@ -12,7 +12,8 @@ captions_collection = db.captions
 
 async def process_caption_generation(request: CaptionRequest) -> dict:
     """
-    Agent to handle the flow of generating captions using Gemini and saving to MongoDB.
+    Agent to handle the flow of generating captions with advertisement
+    post guidance using Gemini and saving to MongoDB.
     """
     # 1. Generate via Gemini
     generated_data = generate_caption_with_gemini(
@@ -21,7 +22,8 @@ async def process_caption_generation(request: CaptionRequest) -> dict:
         platform=request.platform,
         tone=request.tone,
         campaign=request.campaign,
-        location=request.location
+        location=request.location,
+        marketing_goal=request.marketing_goal or "Brand Awareness"
     )
     
     # 2. Save each generated caption variant to MongoDB
@@ -36,9 +38,11 @@ async def process_caption_generation(request: CaptionRequest) -> dict:
             "business_id": request.business_id or "default_business",
             "platform": request.platform,
             "campaign": request.campaign,
+            "marketing_goal": request.marketing_goal or "Brand Awareness",
             "caption": cap.get("caption", ""),
             "cta": cap.get("cta", ""),
             "hashtags": cap.get("hashtags", []),
+            "post_guidance": cap.get("post_guidance", {}),
             "created_at": datetime.utcnow()
         })
         
