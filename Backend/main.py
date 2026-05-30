@@ -45,6 +45,13 @@ app.add_middleware(
 # Include caption generator router
 app.include_router(caption_router)
 
+@app.get("/")
+def health():
+    return {
+        "status": "running",
+        "service": "BrandPilot AI"
+    }
+
 @app.post("/api/analyze-competitor", response_model=FullAnalysisResponse)
 async def analyze_competitor_endpoint(request: AnalysisRequest):
     """
@@ -157,4 +164,8 @@ async def analyze_competitor_endpoint(request: AnalysisRequest):
     )
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000
+    )

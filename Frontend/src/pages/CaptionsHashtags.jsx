@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useBusiness } from '../context/BusinessContext';
 import axios from 'axios';
+import API_URL from '../config/api';
 
 const CaptionsHashtags = () => {
   const { businessData } = useBusiness();
@@ -47,8 +48,7 @@ const CaptionsHashtags = () => {
     setLoading(true);
     setResults(null);
     try {
-      // Assuming FastAPI runs on port 8000
-      const response = await axios.post('http://127.0.0.1:8000/api/caption/generate', formData);
+      const response = await axios.post(`${API_URL}/api/caption/generate`, formData);
       if (response.data && response.data.captions) {
         setResults(response.data.captions);
         setActiveTab(0);
