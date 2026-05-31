@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   UserCircle,
-  Calendar,
+  LayoutGrid,
   Hash,
   BarChart3,
   Settings,
@@ -13,7 +13,8 @@ import {
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: UserCircle, label: 'Business Profile', path: '/profile' },
-  { icon: Calendar, label: 'Campaign Planner', path: '/campaign' },
+  { icon: Zap, label: 'Campaign Planner', path: '/campaign' },
+  { icon: LayoutGrid, label: 'Content Planner', path: '/calendar' },
   { icon: Hash, label: 'Captions & Hashtags', path: '/captions' },
   { icon: BarChart3, label: 'Competitor Analysis', path: '/competitor' },
 ];

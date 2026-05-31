@@ -7,8 +7,7 @@ import {
   MessageSquare,
   TrendingUp,
   ArrowRight,
-  Clock,
-  ExternalLink
+  LayoutGrid,
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -17,9 +16,9 @@ const Dashboard = () => {
 
   const quickActions = [
     {
-      title: 'Generate Campaign',
+      title: 'Campaign Planner',
       desc: 'AI-powered weekly strategy',
-      icon: Zap,
+      icon: Zap, // Matching sidebar icon
       color: 'from-purple-500 to-blue-500',
       path: '/campaign'
     },
@@ -36,6 +35,13 @@ const Dashboard = () => {
       icon: TrendingUp,
       color: 'from-indigo-500 to-purple-500',
       path: '/competitor'
+    },
+    {
+      title: 'Content Planner',
+      desc: 'AI social media schedule',
+      icon: LayoutGrid,
+      color: 'from-emerald-500 to-teal-500',
+      path: '/calendar'
     },
   ];
 
@@ -73,7 +79,7 @@ const Dashboard = () => {
               </div>
               <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
                 <span className="text-gray-400 text-sm">Target Audience</span>
-                <span className="font-semibold">{businessData.audienceType[0] || 'Not set'}</span>
+                <span className="font-semibold">{businessData.audienceType?.[0] || 'Not set'}</span>
               </div>
               <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
                 <span className="text-gray-400 text-sm">Primary Platform</span>
@@ -81,14 +87,14 @@ const Dashboard = () => {
               </div>
               <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
                 <span className="text-gray-400 text-sm">Brand Tone</span>
-                <span className="font-semibold capitalize">{businessData.tone[0] || 'Not set'}</span>
+                <span className="font-semibold capitalize">{businessData.tone?.[0] || 'Not set'}</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* Quick Actions */}
-        <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
           {quickActions.map((action, i) => (
             <motion.div
               key={action.title}
