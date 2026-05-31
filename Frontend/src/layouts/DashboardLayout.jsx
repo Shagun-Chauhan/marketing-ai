@@ -1,9 +1,9 @@
 import React from 'react';
 import Sidebar from '../components/Sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 
-const DashboardLayout = ({ children }) => {
+const DashboardLayout = () => {
   const { pathname } = useLocation();
 
   return (
@@ -11,7 +11,6 @@ const DashboardLayout = ({ children }) => {
       <Sidebar />
 
       <main className="pl-64 min-h-screen flex flex-col">
-
         <div className="p-8 flex-1">
           <AnimatePresence mode="wait">
             <motion.div
@@ -21,7 +20,7 @@ const DashboardLayout = ({ children }) => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              {children}
+              <Outlet />
             </motion.div>
           </AnimatePresence>
         </div>
