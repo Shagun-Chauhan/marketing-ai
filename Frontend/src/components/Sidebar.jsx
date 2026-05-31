@@ -6,7 +6,6 @@ import {
   LayoutGrid,
   Hash,
   BarChart3,
-  Settings,
   Zap
 } from 'lucide-react';
 
@@ -17,6 +16,11 @@ const navItems = [
   { icon: LayoutGrid, label: 'Content Planner', path: '/calendar' },
   { icon: Hash, label: 'Captions & Hashtags', path: '/captions' },
   { icon: BarChart3, label: 'Competitor Analysis', path: '/competitor' },
+  { icon: LayoutDashboard, label: 'Dashboard',          path: '/dashboard' },
+  { icon: UserCircle,      label: 'Business Profile',   path: '/business-profile' },
+  { icon: Calendar,        label: 'Campaign Planner',   path: '/campaign-planner' },
+  { icon: Hash,            label: 'Captions & Hashtags',path: '/captions-hashtags' },
+  { icon: BarChart3,       label: 'Competitor Analysis',path: '/competitor-analysis' },
 ];
 
 const Sidebar = () => {
@@ -26,7 +30,9 @@ const Sidebar = () => {
         <div className="w-10 h-10 bg-gradient-accent rounded-xl flex items-center justify-center shadow-accent-glow">
           <Zap className="text-white fill-white" size={24} />
         </div>
-        <h1 className="text-xl font-bold tracking-tight">BrandPilot <span className="text-accent-start">AI</span></h1>
+        <h1 className="text-xl font-bold tracking-tight">
+          BrandPilot <span className="text-accent-start">AI</span>
+        </h1>
       </div>
 
       <nav className="flex-1 px-4 py-6 space-y-2">
