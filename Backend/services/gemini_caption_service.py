@@ -2,42 +2,43 @@ import google.generativeai as genai
 import os
 import json
 
-# The AI behaves like: "Professional Social Media Advertisement Designer & Marketing Strategist"
-# Generates: caption, CTA, hashtags, advertisement post guidance, poster design, branding suggestions
+# The AI behaves like: "Practical Business Ad Advisor"
+# Generates: caption, CTA, hashtags, advertisement blueprint, poster layout, why-this-works
 # Focus: ONLY static promotional posts — NO reels, videos, cinematic content
+# Language: Simple, business-owner friendly — NO designer jargon
 
 PLATFORM_GUIDANCE = {
     "Instagram": (
-        "Instagram Post Guidelines:\n"
-        "- Visually attractive square post (1:1 ratio)\n"
-        "- Bold headline with large readable font\n"
-        "- Minimal text — let visuals dominate\n"
-        "- Aesthetic branding with consistent color scheme\n"
-        "- CTA button or text at bottom of post"
+        "Instagram Post Tips:\n"
+        "- Best size: 1080x1080 pixels (square)\n"
+        "- Keep text short — the image should grab attention first\n"
+        "- Use a bold headline people can read on a phone screen\n"
+        "- Put your logo in a corner so it doesn't block the main image\n"
+        "- Add a clear button-like text at the bottom (e.g., 'Order Now')"
     ),
     "LinkedIn": (
-        "LinkedIn Post Guidelines:\n"
-        "- Professional business promotional banner (1200x627 or 1:1)\n"
-        "- Informative layout with clear value proposition\n"
-        "- Clean typography — serif or modern sans-serif\n"
-        "- Subtle branding with company logo placement\n"
-        "- Data-driven or authority-building messaging"
+        "LinkedIn Post Tips:\n"
+        "- Best size: 1200x627 pixels (landscape) or 1080x1080 (square)\n"
+        "- Keep it professional — use clean backgrounds, no flashy neon colors\n"
+        "- Show what your business does or the value you provide\n"
+        "- Include your company logo and name\n"
+        "- Use facts, numbers, or results to build trust"
     ),
     "Facebook": (
-        "Facebook Post Guidelines:\n"
-        "- Community-focused advertisement post\n"
-        "- Larger readable text for mobile feeds\n"
-        "- Promotional offer highlight with urgency\n"
-        "- Warm, engaging color tones\n"
-        "- Clear CTA with action-oriented language"
+        "Facebook Post Tips:\n"
+        "- Best size: 1200x630 pixels or 1080x1080 (square)\n"
+        "- Use warm and friendly colors that feel inviting\n"
+        "- Make text big enough to read on mobile phones\n"
+        "- Highlight the deal or offer front and center\n"
+        "- Include a clear call-to-action like 'Shop Now' or 'Visit Us'"
     ),
     "Twitter": (
-        "Twitter/X Post Guidelines:\n"
-        "- Concise punchy text with visual card\n"
-        "- Hashtag-driven discoverability\n"
-        "- Strong brand voice in minimal words\n"
-        "- Eye-catching banner image (1200x675)\n"
-        "- Direct link or CTA in the post"
+        "Twitter/X Post Tips:\n"
+        "- Best size: 1200x675 pixels\n"
+        "- Keep everything short and punchy\n"
+        "- Use 3-5 strong hashtags for discoverability\n"
+        "- Make the image eye-catching since feeds move fast\n"
+        "- Include a direct link or CTA in the post text"
     ),
 }
 
@@ -60,28 +61,31 @@ def generate_caption_with_gemini(
 
     platform_tips = PLATFORM_GUIDANCE.get(platform, PLATFORM_GUIDANCE["Instagram"])
 
-    system_prompt = """You are a Professional Social Media Advertisement Designer & Marketing Strategist.
+    system_prompt = """You are a Practical Business Ad Advisor who helps small business owners create effective social media advertisements.
 
-Your job is to help businesses create high-converting STATIC promotional social media posts.
+You speak in simple, everyday language. The business owner you are helping has ZERO design experience.
+
+Your job is to tell them EXACTLY what to put in their advertisement post — like giving instructions to a friend.
 
 You must generate:
-1. Social media caption (engaging, platform-optimized)
-2. CTA (clear call-to-action)
-3. Hashtags (relevant, trending, niche-specific)
-4. Advertisement Post Guidance (static post design direction)
-5. Poster Design Suggestions (visual layout and elements)
-6. Brand Style Recommendations (colors, typography, branding)
-7. Advertisement Layout Ideas (text hierarchy, placement)
+1. Social media caption (engaging, ready to copy-paste)
+2. CTA (a clear action you want the viewer to take)
+3. Hashtags (relevant hashtags that help the post get discovered)
+4. Advertisement Blueprint (step-by-step what to put in the image post)
+5. Why This Ad Will Work (business reasons, not design reasons)
+6. Poster Layout Guide (what goes at the top, middle, and bottom of the post)
 
 CRITICAL RULES:
-- Focus ONLY on static promotional post guidance (images, posters, banners, creatives).
-- NEVER generate reel suggestions, video guidance, cinematic shots, camera movement suggestions, or video hooks.
-- NEVER mention reels, videos, motion graphics, transitions, or any video-related content.
-- All guidance must be for STATIC IMAGE posts only (promotional posters, advertisement banners, marketing creatives, branded designs).
+- Focus ONLY on static image posts (posters, banners, single-image ads).
+- NEVER suggest reels, videos, animations, motion graphics, or transitions.
+- NEVER use designer jargon like: typography hierarchy, branding consistency, cinematic visuals, visual composition, serif fonts, embossed logo, color theory, negative space, or visual weight.
+- Explain everything as if talking to a business owner who will create this in Canva or give instructions to a local printer.
+- Be specific — don't say "use professional imagery", say "use a photo of your actual product on a clean table".
+- For colors, say the actual color name and where to use it (e.g., "Use dark blue for the background and white for the text").
 
-Output a JSON object with an array of 'captions'. Each object must include caption, cta, hashtags, and post_guidance."""
+Output a JSON object with an array of 'captions'."""
 
-    user_prompt = f"""Generate 3 variations of promotional social media advertisement content based on:
+    user_prompt = f"""Generate 3 different advertisement ideas for this business:
 
 Business Type: {business_type}
 Target Audience: {target_audience}
@@ -93,30 +97,45 @@ Marketing Goal: {marketing_goal}
 
 {platform_tips}
 
-Each variation must have a DIFFERENT design approach and visual style.
+Each idea should look completely different and take a different approach.
 
 Ensure the output is valid JSON matching this EXACT schema:
 {{
   "captions": [
     {{
-      "caption": "Engaging social media caption text with emojis",
-      "cta": "Clear call-to-action text",
+      "caption": "Ready-to-post social media caption with emojis. Keep it engaging and natural.",
+      "cta": "Clear call-to-action — what should the viewer do? (e.g., 'Visit us today!', 'DM to book', 'Link in bio')",
       "hashtags": ["#Hashtag1", "#Hashtag2", "#Hashtag3", "#Hashtag4", "#Hashtag5"],
-      "post_guidance": {{
-        "post_type": "Specific static post type for {platform}",
-        "poster_headline": "Bold headline for the poster/creative",
-        "design_style": "Visual design direction and mood",
-        "color_palette": ["Color1", "Color2", "Color3"],
-        "visual_elements": ["Element1", "Element2", "Element3"],
-        "text_placement": "Where headline, body text, and CTA should go on the poster",
-        "branding_tip": "Specific branding advice for this post",
-        "engagement_tip": "Strategy to maximize engagement with this static post"
+      "advertisement_blueprint": {{
+        "post_type": "What kind of post to create — e.g., 'Square image post for {platform} Feed'",
+        "main_headline": "The big bold text that should be written on the image — this is the first thing people see",
+        "main_image": "Describe exactly what photo or image should be used. Be very specific. E.g., 'A photo of a fresh pizza being pulled out of a wood-fired oven with cheese stretching'",
+        "offer_text": "What deal or offer text should be shown on the post — e.g., 'Flat 30% OFF this weekend only'",
+        "background_idea": "What the background of the post should look like — e.g., 'A solid dark red background' or 'A blurred photo of your restaurant'",
+        "logo_position": "Where to place the business logo — e.g., 'Top-right corner, keep it small'",
+        "cta_position": "Where to put the call-to-action text and what it should say — e.g., 'Put a yellow button at the bottom saying Order Now'",
+        "recommended_size": "1080x1080"
+      }},
+      "why_this_will_work": [
+        "Business reason 1 — why this ad will attract customers (e.g., 'Limited-time offers create urgency and drive quick decisions')",
+        "Business reason 2 — why this will resonate with the target audience",
+        "Business reason 3 — why this format works well on this platform"
+      ],
+      "poster_layout": {{
+        "top_section": "What to put at the top of the post — e.g., 'Your cafe logo and name in small text'",
+        "center_section": "What to put in the middle — e.g., 'The main food photo with the headline overlaid in big white text'",
+        "bottom_section": "What to put at the bottom — e.g., 'The offer text, a CTA button, and your phone number/address'",
+        "color_suggestion": "What colors to use and why — e.g., 'Use deep red and white — red grabs attention and white makes text easy to read'"
       }}
     }}
   ]
 }}
 
-Remember: ALL guidance must be for STATIC promotional posts ONLY. No reels, no videos, no motion content."""
+Remember:
+- ALL guidance must be for STATIC IMAGE posts ONLY.
+- Use simple language a business owner can understand.
+- Be specific about what image to use, what text to write, and where to put things.
+- Do NOT use design jargon."""
 
     try:
         response = model.generate_content(
