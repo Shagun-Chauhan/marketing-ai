@@ -2,6 +2,13 @@ import React from 'react';
 import { useBusiness } from '../context/BusinessContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import {
+  Zap,
+  MessageSquare,
+  TrendingUp,
+  ArrowRight,
+  LayoutGrid,
+} from 'lucide-react';
 import { Zap, MessageSquare, TrendingUp, ArrowRight } from 'lucide-react';
 
 const Dashboard = () => {
@@ -20,9 +27,9 @@ const Dashboard = () => {
 
   const quickActions = [
     {
-      title: 'Generate Campaign',
+      title: 'Campaign Planner',
       desc: 'AI-powered weekly strategy',
-      icon: Zap,
+      icon: Zap, // Matching sidebar icon
       color: 'from-purple-500 to-blue-500',
       path: '/campaign-planner',
     },
@@ -39,6 +46,13 @@ const Dashboard = () => {
       icon: TrendingUp,
       color: 'from-indigo-500 to-purple-500',
       path: '/competitor-analysis',
+    },
+    {
+      title: 'Content Planner',
+      desc: 'AI social media schedule',
+      icon: LayoutGrid,
+      color: 'from-emerald-500 to-teal-500',
+      path: '/calendar'
     },
   ];
 
@@ -70,6 +84,22 @@ const Dashboard = () => {
               Business Overview
             </h3>
             <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
+                <span className="text-gray-400 text-sm">Business Name</span>
+                <span className="font-semibold">{businessData.businessName || 'Not set'}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
+                <span className="text-gray-400 text-sm">Target Audience</span>
+                <span className="font-semibold">{businessData.audienceType?.[0] || 'Not set'}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
+                <span className="text-gray-400 text-sm">Primary Platform</span>
+                <span className="font-semibold">{businessData.primaryPlatform || 'Not set'}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
+                <span className="text-gray-400 text-sm">Brand Tone</span>
+                <span className="font-semibold capitalize">{businessData.tone?.[0] || 'Not set'}</span>
+              </div>
               {[
                 { label: 'Business Name',   value: businessName },
                 { label: 'Target Audience', value: targetAudience },
@@ -89,6 +119,8 @@ const Dashboard = () => {
         </section>
 
         {/* Quick Actions */}
+        <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {quickActions.map((action, i) => (
         <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
           {quickActions.map((action) => (
             <motion.div

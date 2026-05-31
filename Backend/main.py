@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routes.auth_routes import router as auth_router
 from routes.caption_routes import router as caption_router
+from routes.calendar_routes import router as calendar_router
 
 app = FastAPI()
 
@@ -16,6 +17,8 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(caption_router)
+# Include calendar router
+app.include_router(calendar_router)
 
 
 @app.get("/")
