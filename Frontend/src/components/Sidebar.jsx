@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   UserCircle,
@@ -7,6 +7,10 @@ import {
   Hash,
   BarChart3,
   Zap,
+<<<<<<< Updated upstream
+=======
+  LogOut
+>>>>>>> Stashed changes
 } from 'lucide-react';
 
 const navItems = [
@@ -43,6 +47,15 @@ const navItems = [
 ];
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userName");
+    navigate("/login");
+  };
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-white/10 flex flex-col z-50">
       <div className="p-6 flex items-center gap-3">
@@ -69,6 +82,16 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
+
+      <div className="px-4 py-6 border-t border-white/10">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+        >
+          <LogOut size={20} />
+          <span className="font-medium">Logout</span>
+        </button>
+      </div>
     </aside>
   );
 };

@@ -21,7 +21,6 @@ export default function Signup() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
 
-  // Forgot password
   const [fpStep, setFpStep] = useState(null);
   const [fpEmail, setFpEmail] = useState("");
   const [fpOtp, setFpOtp] = useState(["", "", "", "", "", ""]);
@@ -60,7 +59,6 @@ export default function Signup() {
       />
     ));
 
-  // Signup handlers
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!name || !email || !password || !confirm) { setError("Please fill in all fields."); return; }
@@ -105,7 +103,6 @@ export default function Signup() {
     await fetch(`${API}/resend-otp`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) }).catch(() => {});
   };
 
-  // Forgot password handlers
   const handleFpSendOtp = async (e) => {
     e.preventDefault();
     if (!fpEmail) { setError("Enter your email address."); return; }
@@ -117,11 +114,7 @@ export default function Signup() {
         body: JSON.stringify({ email: fpEmail }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.detail || "Email not found. Please check and try again.");
-        setEmailNotFound(true);
-        return;
-      }
+      if (!res.ok) { setError(data.detail || "Email not found. Please check and try again."); setEmailNotFound(true); return; }
       setFpStep(FP_STEPS.OTP);
       makeTimer(setFpResendTimer);
     } catch { setError("Cannot connect to server."); }
@@ -173,8 +166,6 @@ export default function Signup() {
     finally { setLoading(false); }
   };
 
-  // ── Forgot password screens ──────────────────────────────────────────────
-
   if (fpStep === FP_STEPS.EMAIL) {
     return (
       <PageShell>
@@ -187,20 +178,14 @@ export default function Signup() {
         <form onSubmit={handleFpSendOtp} style={S.form}>
           <div style={S.fieldGroup}>
             <label style={S.label}>Email address</label>
-            <input
-              type="email"
-              value={fpEmail}
+            <input type="email" value={fpEmail}
               onChange={(e) => { setFpEmail(e.target.value); setError(""); setEmailNotFound(false); }}
               placeholder="you@example.com"
               style={error ? { ...S.input, borderColor: "rgba(239,68,68,0.5)" } : S.input}
-              autoComplete="email"
-            />
+              autoComplete="email" />
             {error && <span style={S.fieldError}>{error}</span>}
             {emailNotFound && (
-              <p style={S.notFoundText}>
-                Already have an account?{" "}
-                <Link to="/login" style={S.notFoundLink}>Sign in</Link>
-              </p>
+              <p style={S.notFoundText}>Already have an account?{" "}<Link to="/login" style={S.notFoundLink}>Sign in</Link></p>
             )}
           </div>
           <button type="submit" style={S.btn} disabled={loading}>
@@ -250,7 +235,7 @@ export default function Signup() {
             <div style={S.pwWrap}>
               <input type={showNewPw ? "text" : "password"} value={newPassword}
                 onChange={(e) => { setNewPassword(e.target.value); setError(""); }}
-                placeholder="Min. 6 characters" style={{ ...S.input, paddingRight: "44px" }} autoComplete="new-password" />
+                placeholder="Min. 6 characters" style={{ ...S.input, paddingRight: "44px" }} autoComplete="off" />
               <button type="button" onClick={() => setShowNewPw(!showNewPw)} style={S.eyeBtn}><EyeIcon open={showNewPw} /></button>
             </div>
           </div>
@@ -259,7 +244,7 @@ export default function Signup() {
             <div style={S.pwWrap}>
               <input type={showNewConfirm ? "text" : "password"} value={newConfirm}
                 onChange={(e) => { setNewConfirm(e.target.value); setError(""); }}
-                placeholder="Re-enter password" style={{ ...S.input, paddingRight: "44px" }} autoComplete="new-password" />
+                placeholder="Re-enter password" style={{ ...S.input, paddingRight: "44px" }} autoComplete="off" />
               <button type="button" onClick={() => setShowNewConfirm(!showNewConfirm)} style={S.eyeBtn}><EyeIcon open={showNewConfirm} /></button>
             </div>
           </div>
@@ -271,7 +256,6 @@ export default function Signup() {
     );
   }
 
-  // ── Main signup card ─────────────────────────────────────────────────────
   return (
     <PageShell>
       <Logo />
@@ -298,7 +282,7 @@ export default function Signup() {
               <div style={S.pwWrap}>
                 <input type={showPassword ? "text" : "password"} value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                  placeholder="Min. 6 characters" style={{ ...S.input, paddingRight: "44px" }} autoComplete="new-password" />
+                  placeholder="Min. 6 characters" style={{ ...S.input, paddingRight: "44px" }} autoComplete="off" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} style={S.eyeBtn}><EyeIcon open={showPassword} /></button>
               </div>
             </div>
@@ -307,7 +291,7 @@ export default function Signup() {
               <div style={S.pwWrap}>
                 <input type={showConfirm ? "text" : "password"} value={confirm}
                   onChange={(e) => { setConfirm(e.target.value); setError(""); }}
-                  placeholder="Re-enter password" style={{ ...S.input, paddingRight: "44px" }} autoComplete="new-password" />
+                  placeholder="Re-enter password" style={{ ...S.input, paddingRight: "44px" }} autoComplete="off" />
                 <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={S.eyeBtn}><EyeIcon open={showConfirm} /></button>
               </div>
             </div>
@@ -360,7 +344,17 @@ function PageShell({ children }) {
   return (
     <div style={S.page}>
       <div style={S.blob1} /><div style={S.blob2} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        input::-ms-reveal,
+        input::-ms-clear,
+        input::-webkit-contacts-auto-fill-button,
+        input::-webkit-credentials-auto-fill-button {
+          display: none !important;
+          visibility: hidden;
+          pointer-events: none;
+        }
+      `}</style>
       <div style={S.card}>{children}</div>
     </div>
   );

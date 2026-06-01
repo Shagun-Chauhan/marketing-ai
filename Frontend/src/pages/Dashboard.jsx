@@ -15,7 +15,15 @@ const Dashboard = () => {
   const { businessData } = useBusiness();
   const navigate = useNavigate();
 
-  // Safe accessors — handles undefined, null, or empty arrays without crashing
+  // Get logged-in user's name from localStorage (set during login OTP verify)
+  const rawName = localStorage.getItem("userName") || "";
+  // Capitalize first letter for display
+  const userName = rawName.trim()
+    ? rawName.trim().charAt(0).toUpperCase() + rawName.trim().slice(1)
+    : "";
+  const greeting = userName ? `Welcome back, ${userName} 👋` : "Welcome back 👋";
+
+  // Safe accessors
   const businessName    = businessData?.businessName || 'Not set';
   const targetAudience  = Array.isArray(businessData?.audienceType)
     ? (businessData.audienceType[0] || 'Not set')
@@ -66,7 +74,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, x: 0 }}
             className="text-4xl font-bold mb-2"
           >
-            Welcome back 👋
+            {greeting}
           </motion.h2>
           <p className="text-white/80 text-lg">Let's grow your brand today.</p>
         </div>
@@ -101,10 +109,10 @@ const Dashboard = () => {
                 <span className="font-semibold capitalize">{businessData.tone?.[0] || 'Not set'}</span>
               </div>
               {[
-                { label: 'Business Name',   value: businessName },
-                { label: 'Target Audience', value: targetAudience },
-                { label: 'Primary Platform',value: primaryPlatform },
-                { label: 'Brand Tone',      value: brandTone },
+                { label: 'Business Name',    value: businessName },
+                { label: 'Target Audience',  value: targetAudience },
+                { label: 'Primary Platform', value: primaryPlatform },
+                { label: 'Brand Tone',       value: brandTone },
               ].map((item) => (
                 <div
                   key={item.label}
