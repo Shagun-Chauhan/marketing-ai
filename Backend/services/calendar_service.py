@@ -7,7 +7,12 @@ from typing import Dict, Any, List
 
 def generate_mock_calendar(duration: str, business_name: str, industry: str, primary_platform: str) -> Dict[str, Any]:
     """Generate mock calendar data when AI is not available"""
-    days_count = 7 if duration == "weekly" else 30
+    if duration == "weekly":
+        days_count = 7
+        labels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    else:
+        days_count = 5
+        labels = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
     calendar_days = []
     
     content_types = ["Post", "Reel", "Story", "Carousel", "Video"]
@@ -16,11 +21,10 @@ def generate_mock_calendar(duration: str, business_name: str, industry: str, pri
     categories = ["Offer", "Product", "Service", "Educational", "Testimonial", "Launch", "Festival", "Seasonal"]
     
     for i in range(days_count):
-        date = (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d")
         calendar_days.append({
-            "date": date,
+            "date": labels[i],
             "content_type": content_types[i % len(content_types)],
-            "title": f"{business_name} - Day {i+1} Content",
+            "title": f"{business_name} - {labels[i]} Content",
             "description": f"Engaging content for {industry} business focusing on brand awareness and customer engagement.",
             "purpose": purposes[i % len(purposes)],
             "recommended_time": "10:00 AM",
@@ -80,7 +84,7 @@ def generate_calendar_with_gemini(
     location = business_data.get("location", "")
     
     # Determine number of days
-    days_count = 7 if duration == "weekly" else 30
+    days_count = 7 if duration == "weekly" else 5
     
     # Build platform list
     platforms = [primary_platform] + secondary_platforms if secondary_platforms else [primary_platform]
@@ -103,7 +107,7 @@ def generate_calendar_with_gemini(
 Your task is to generate a comprehensive content calendar for businesses based on their profile.
 
 You must create a day-by-day content plan that includes:
-- Date (YYYY-MM-DD format)
+- Day/Week Label (e.g., Monday or Week 1)
 - Content Type (Post, Reel, Story, Carousel, Video)
 - Title (catchy, relevant title)
 - Description (detailed content description)
@@ -139,7 +143,7 @@ Output must be valid JSON with this exact schema:
 {
   "calendar_days": [
     {
-      "date": "YYYY-MM-DD",
+      "date": "Monday/Week 1",
       "content_type": "Post/Reel/Story/Carousel/Video",
       "title": "Content title",
       "description": "Detailed description",
@@ -171,7 +175,13 @@ PLATFORMS: {platforms_str}
 CONTENT FORMATS: {content_formats_str}
 BRAND TONE: {tone_desc}
 
-Generate {days_count} unique content entries starting from today's date.
+Generate {days_count} unique content entries.
+
+IMPORTANT: 
+1. For weekly calendar, use the day names: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.
+2. For monthly calendar, use the week labels: Week 1, Week 2, Week 3, Week 4, Week 5.
+3. DO NOT use actual dates (YYYY-MM-DD) or specify any year like 2024.
+
 Ensure variety in content types, purposes, and campaign categories."""
 
     try:

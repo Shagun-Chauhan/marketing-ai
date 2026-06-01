@@ -9,7 +9,7 @@ import {
   ArrowRight,
   LayoutGrid,
 } from 'lucide-react';
-import { Zap, MessageSquare, TrendingUp, ArrowRight } from 'lucide-react';
+
 
 const Dashboard = () => {
   const { businessData } = useBusiness();
@@ -119,26 +119,38 @@ const Dashboard = () => {
         </section>
 
         {/* Quick Actions */}
-        <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {quickActions.map((action, i) => (
-        <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {quickActions.map((action) => (
-            <motion.div
-              key={action.title}
-              whileHover={{ y: -10, scale: 1.02 }}
-              onClick={() => navigate(action.path)}
-              className="glass-card p-6 cursor-pointer flex flex-col items-center text-center group relative overflow-hidden"
-            >
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center mb-4 shadow-lg group-hover:animate-pulse`}>
-                <action.icon size={28} className="text-white" />
-              </div>
-              <h4 className="font-bold text-lg mb-2">{action.title}</h4>
-              <p className="text-sm text-gray-400 mb-4">{action.desc}</p>
-              <ArrowRight size={20} className="text-accent-start opacity-0 group-hover:opacity-100 transition-all" />
-              <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
-            </motion.div>
-          ))}
-        </section>
+       {/* Quick Actions */}
+<section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+  {quickActions.map((action) => (
+    <motion.div
+      key={action.title}
+      whileHover={{ y: -10, scale: 1.02 }}
+      onClick={() => navigate(action.path)}
+      className="glass-card p-6 cursor-pointer flex flex-col items-center text-center group relative overflow-hidden"
+    >
+      <div
+        className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center mb-4 shadow-lg group-hover:animate-pulse`}
+      >
+        <action.icon size={28} className="text-white" />
+      </div>
+
+      <h4 className="font-bold text-lg mb-2">{action.title}</h4>
+
+      <p className="text-sm text-gray-400 mb-4">
+        {action.desc}
+      </p>
+
+      <ArrowRight
+        size={20}
+        className="text-accent-start opacity-0 group-hover:opacity-100 transition-all"
+      />
+
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-5 transition-opacity`}
+      />
+    </motion.div>
+  ))}
+</section>
       </div>
     </div>
   );

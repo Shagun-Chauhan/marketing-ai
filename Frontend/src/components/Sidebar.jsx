@@ -6,21 +6,40 @@ import {
   LayoutGrid,
   Hash,
   BarChart3,
-  Zap
+  Zap,
 } from 'lucide-react';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-  { icon: UserCircle, label: 'Business Profile', path: '/profile' },
-  { icon: Zap, label: 'Campaign Planner', path: '/campaign' },
-  { icon: LayoutGrid, label: 'Content Planner', path: '/calendar' },
-  { icon: Hash, label: 'Captions & Hashtags', path: '/captions' },
-  { icon: BarChart3, label: 'Competitor Analysis', path: '/competitor' },
-  { icon: LayoutDashboard, label: 'Dashboard',          path: '/dashboard' },
-  { icon: UserCircle,      label: 'Business Profile',   path: '/business-profile' },
-  { icon: Calendar,        label: 'Campaign Planner',   path: '/campaign-planner' },
-  { icon: Hash,            label: 'Captions & Hashtags',path: '/captions-hashtags' },
-  { icon: BarChart3,       label: 'Competitor Analysis',path: '/competitor-analysis' },
+  {
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+    path: '/dashboard',
+  },
+  {
+    icon: UserCircle,
+    label: 'Business Profile',
+    path: '/business-profile',
+  },
+  {
+    icon: Zap,
+    label: 'Campaign Planner',
+    path: '/campaign-planner',
+  },
+  {
+    icon: LayoutGrid,
+    label: 'Content Planner',
+    path: '/calendar',
+  },
+  {
+    icon: Hash,
+    label: 'Captions & Hashtags',
+    path: '/captions-hashtags',
+  },
+  {
+    icon: BarChart3,
+    label: 'Competitor Analysis',
+    path: '/competitor-analysis',
+  },
 ];
 
 const Sidebar = () => {
@@ -28,8 +47,9 @@ const Sidebar = () => {
     <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-white/10 flex flex-col z-50">
       <div className="p-6 flex items-center gap-3">
         <div className="w-10 h-10 bg-gradient-accent rounded-xl flex items-center justify-center shadow-accent-glow">
-          <Zap className="text-white fill-white" size={24} />
+          <Zap className="text-white" size={24} />
         </div>
+
         <h1 className="text-xl font-bold tracking-tight">
           BrandPilot <span className="text-accent-start">AI</span>
         </h1>
