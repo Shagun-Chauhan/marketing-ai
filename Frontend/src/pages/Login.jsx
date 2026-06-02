@@ -2,23 +2,17 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 const API = "http://127.0.0.1:8000/api/auth";
-const STEPS = { EMAIL: "email", OTP: "otp" };
 const FP_STEPS = { EMAIL: "fp_email", OTP: "fp_otp", RESET: "fp_reset" };
 
 export default function Login() {
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(STEPS.EMAIL);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [resendTimer, setResendTimer] = useState(0);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Forgot password
   const [fpStep, setFpStep] = useState(null);
   const [fpEmail, setFpEmail] = useState("");
   const [fpOtp, setFpOtp] = useState(["", "", "", "", "", ""]);
@@ -57,52 +51,27 @@ export default function Login() {
       />
     ));
 
-  // Login handlers
-  const handleSendOtp = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) { setError("Please fill in all fields."); return; }
     if (!/\S+@\S+\.\S+/.test(email)) { setError("Enter a valid email address."); return; }
     setError(""); setLoading(true);
     try {
-      const res = await fetch(`${API}/login/send-otp`, {
+      const res = await fetch(`${API}/login`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.detail || "Invalid email or password."); return; }
-      setStep(STEPS.OTP);
-      makeTimer(setResendTimer);
+      const userName = data.name || data.full_name || data.username || data.user?.name || data.user?.full_name || "";
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("userEmail", email);
+      localStorage.setItem("userName", userName);
+      navigate("/dashboard");
     } catch { setError("Cannot connect to server. Is the backend running?"); }
     finally { setLoading(false); }
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    const code = otp.join("");
-    if (code.length < 6) { setError("Please enter the 6-digit OTP."); return; }
-    setError(""); setLoading(true);
-    try {
-      const res = await fetch(`${API}/login/verify-otp`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: code }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.detail || "Invalid OTP."); return; }
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userEmail", email);
-      setSuccess("Login successful! Redirecting...");
-      setTimeout(() => navigate("/dashboard"), 1500);
-    } catch { setError("Server error. Please try again."); }
-    finally { setLoading(false); }
-  };
-
-  const handleResend = async () => {
-    if (resendTimer > 0) return;
-    setOtp(["", "", "", "", "", ""]); setError(""); makeTimer(setResendTimer);
-    await fetch(`${API}/resend-otp`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) }).catch(() => {});
-  };
-
-  // Forgot password handlers
   const handleFpSendOtp = async (e) => {
     e.preventDefault();
     if (!fpEmail) { setError("Enter your email address."); return; }
@@ -114,11 +83,7 @@ export default function Login() {
         body: JSON.stringify({ email: fpEmail }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.detail || "Email not found. Please check and try again.");
-        setEmailNotFound(true);
-        return;
-      }
+      if (!res.ok) { setError(data.detail || "Email not found. Please check and try again."); setEmailNotFound(true); return; }
       setFpStep(FP_STEPS.OTP);
       makeTimer(setFpResendTimer);
     } catch { setError("Cannot connect to server."); }
@@ -172,8 +137,6 @@ export default function Login() {
     finally { setLoading(false); }
   };
 
-  // ── Forgot password screens ──────────────────────────────────────────────
-
   if (fpStep === FP_STEPS.EMAIL) {
     return (
       <PageShell>
@@ -186,20 +149,14 @@ export default function Login() {
         <form onSubmit={handleFpSendOtp} style={S.form}>
           <div style={S.fieldGroup}>
             <label style={S.label}>Email address</label>
-            <input
-              type="email"
-              value={fpEmail}
+            <input type="email" value={fpEmail}
               onChange={(e) => { setFpEmail(e.target.value); setError(""); setEmailNotFound(false); }}
               placeholder="you@example.com"
               style={error ? { ...S.input, borderColor: "rgba(239,68,68,0.5)" } : S.input}
-              autoComplete="email"
-            />
+              autoComplete="email" />
             {error && <span style={S.fieldError}>{error}</span>}
             {emailNotFound && (
-              <p style={S.notFoundText}>
-                Don't have an account?{" "}
-                <Link to="/signup" style={S.notFoundLink}>Sign up</Link>
-              </p>
+              <p style={S.notFoundText}>Don't have an account?{" "}<Link to="/signup" style={S.notFoundLink}>Sign up</Link></p>
             )}
           </div>
           <button type="submit" style={S.btn} disabled={loading}>
@@ -249,7 +206,7 @@ export default function Login() {
             <div style={S.pwWrap}>
               <input type={showNewPw ? "text" : "password"} value={newPassword}
                 onChange={(e) => { setNewPassword(e.target.value); setError(""); }}
-                placeholder="Min. 6 characters" style={{ ...S.input, paddingRight: "44px" }} autoComplete="new-password" />
+                placeholder="Min. 6 characters" style={{ ...S.input, paddingRight: "44px" }} autoComplete="off" />
               <button type="button" onClick={() => setShowNewPw(!showNewPw)} style={S.eyeBtn}><EyeIcon open={showNewPw} /></button>
             </div>
           </div>
@@ -258,7 +215,7 @@ export default function Login() {
             <div style={S.pwWrap}>
               <input type={showNewConfirm ? "text" : "password"} value={newConfirm}
                 onChange={(e) => { setNewConfirm(e.target.value); setError(""); }}
-                placeholder="Re-enter password" style={{ ...S.input, paddingRight: "44px" }} autoComplete="new-password" />
+                placeholder="Re-enter password" style={{ ...S.input, paddingRight: "44px" }} autoComplete="off" />
               <button type="button" onClick={() => setShowNewConfirm(!showNewConfirm)} style={S.eyeBtn}><EyeIcon open={showNewConfirm} /></button>
             </div>
           </div>
@@ -270,72 +227,41 @@ export default function Login() {
     );
   }
 
-  // ── Main login ───────────────────────────────────────────────────────────
   return (
     <PageShell>
       <Logo />
-      {step === STEPS.EMAIL ? (
-        <>
-          <h1 style={S.heading}>Welcome back</h1>
-          <p style={S.subheading}>Sign in to grow your brand today</p>
-          {error && <div style={S.errorBox}>{error}</div>}
-          <form onSubmit={handleSendOtp} style={S.form}>
-            <div style={S.fieldGroup}>
-              <label style={S.label}>Email address</label>
-              <input type="email" value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(""); }}
-                placeholder="you@example.com" style={S.input} autoComplete="email" />
-            </div>
-            <div style={S.fieldGroup}>
-              <div style={S.labelRow}>
-                <label style={S.label}>Password</label>
-                <button type="button" onClick={() => { setFpStep(FP_STEPS.EMAIL); setFpEmail(email); setError(""); setEmailNotFound(false); }} style={S.forgotBtn}>
-                  Forgot password?
-                </button>
-              </div>
-              <div style={S.pwWrap}>
-                <input type={showPassword ? "text" : "password"} value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                  placeholder="Enter your password" style={{ ...S.input, paddingRight: "44px" }} autoComplete="current-password" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} style={S.eyeBtn}><EyeIcon open={showPassword} /></button>
-              </div>
-            </div>
-            <button type="submit" style={S.btn} disabled={loading}>
-              {loading ? <Spinner label="Sending OTP…" /> : "Continue with OTP"}
+      <h1 style={S.heading}>Welcome back</h1>
+      <p style={S.subheading}>Sign in to grow your brand today</p>
+      {error && <div style={S.errorBox}>{error}</div>}
+      <form onSubmit={handleLogin} style={S.form}>
+        <div style={S.fieldGroup}>
+          <label style={S.label}>Email address</label>
+          <input type="email" value={email}
+            onChange={(e) => { setEmail(e.target.value); setError(""); }}
+            placeholder="you@example.com" style={S.input} autoComplete="email" />
+        </div>
+        <div style={S.fieldGroup}>
+          <div style={S.labelRow}>
+            <label style={S.label}>Password</label>
+            <button type="button" onClick={() => { setFpStep(FP_STEPS.EMAIL); setFpEmail(email); setError(""); setEmailNotFound(false); }} style={S.forgotBtn}>
+              Forgot password?
             </button>
-          </form>
-          <p style={S.switchText}>
-            Don't have an account?{" "}
-            <Link to="/signup" style={S.switchLink}>Create one</Link>
-          </p>
-        </>
-      ) : (
-        <>
-          <button onClick={() => { setStep(STEPS.EMAIL); setOtp(["","","","","",""]); setError(""); setSuccess(""); }} style={S.backBtn}>
-            <ChevronLeft /> Back
-          </button>
-          <h1 style={S.heading}>Check your email</h1>
-          <p style={S.subheading}>We sent a 6-digit code to<br /><span style={S.emailHighlight}>{email}</span></p>
-          {error && <div style={S.errorBox}>{error}</div>}
-          {success && <div style={S.successBox}>{success}</div>}
-          <form onSubmit={handleVerifyOtp} style={S.form}>
-            <div style={S.otpRow}>{renderOtpBoxes(otp, setOtp, "pw")}</div>
-            <button type="submit" style={S.btn} disabled={loading}>
-              {loading ? <Spinner label="Verifying…" /> : "Verify & Sign In"}
-            </button>
-          </form>
-          <p style={S.resendText}>
-            Didn't receive the code?{" "}
-            <button onClick={handleResend} disabled={resendTimer > 0} style={{ ...S.resendBtn, opacity: resendTimer > 0 ? 0.5 : 1 }}>
-              {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
-            </button>
-          </p>
-          <p style={S.switchText}>
-            Don't have an account?{" "}
-            <Link to="/signup" style={S.switchLink}>Create one</Link>
-          </p>
-        </>
-      )}
+          </div>
+          <div style={S.pwWrap}>
+            <input type={showPassword ? "text" : "password"} value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              placeholder="Enter your password" style={{ ...S.input, paddingRight: "44px" }} autoComplete="off" />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} style={S.eyeBtn}><EyeIcon open={showPassword} /></button>
+          </div>
+        </div>
+        <button type="submit" style={S.btn} disabled={loading}>
+          {loading ? <Spinner label="Signing in…" /> : "Sign In"}
+        </button>
+      </form>
+      <p style={S.switchText}>
+        Don't have an account?{" "}
+        <Link to="/signup" style={S.switchLink}>Create one</Link>
+      </p>
     </PageShell>
   );
 }
@@ -344,7 +270,17 @@ function PageShell({ children }) {
   return (
     <div style={S.page}>
       <div style={S.blob1} /><div style={S.blob2} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        input::-ms-reveal,
+        input::-ms-clear,
+        input::-webkit-contacts-auto-fill-button,
+        input::-webkit-credentials-auto-fill-button {
+          display: none !important;
+          visibility: hidden;
+          pointer-events: none;
+        }
+      `}</style>
       <div style={S.card}>{children}</div>
     </div>
   );
