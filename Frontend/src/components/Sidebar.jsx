@@ -7,10 +7,7 @@ import {
   Hash,
   BarChart3,
   Zap,
-<<<<<<< Updated upstream
-=======
   LogOut
->>>>>>> Stashed changes
 } from 'lucide-react';
 
 const navItems = [

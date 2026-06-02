@@ -10,8 +10,11 @@ pydantic
 pytrends
 emoji
 motor
+pymongo
+dnspython
 groq
 passlib[bcrypt]
+bcrypt==4.0.1
 PyJWT
 email-validator
 pydantic[email]

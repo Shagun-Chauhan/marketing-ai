@@ -7,15 +7,22 @@ from dotenv import load_dotenv
 import jwt
 from datetime import datetime, timedelta
 
+# ✅ Import DB helpers instead of using a dictionary
+from database import (
+    db_user_exists, db_create_user,
+    db_get_user, db_update_password
+)
+
 load_dotenv()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY", "brandpilot-secret-key")
 ALGORITHM = "HS256"
 
+# These stay in-memory — they are temporary/session data (OTPs expire in 10min anyway)
 otp_store = {}
-user_store = {}
 reset_token_store = {}
+
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -30,6 +37,7 @@ def send_otp_email(to_email, otp):
     EMAIL_USER = os.getenv("EMAIL_USER")
     EMAIL_PASS = os.getenv("EMAIL_PASS")
     if not EMAIL_USER or not EMAIL_PASS:
+        # No email credentials — print OTP to console for development
         print(f"\n{'='*40}\nOTP for {to_email}: {otp}\n{'='*40}\n")
         return
     msg = MIMEMultipart("alternative")
@@ -41,11 +49,14 @@ def send_otp_email(to_email, otp):
         server.login(EMAIL_USER, EMAIL_PASS)
         server.sendmail(EMAIL_USER, to_email, msg.as_string())
 
+
 # ── Signup ───────────────────────────────────────────────────────────────────
 
 def service_signup_send_otp(name, email, password):
-    if email in user_store:
+    # ✅ Check DB instead of dictionary
+    if db_user_exists(email):
         raise HTTPException(status_code=409, detail="Account already exists. Please login.")
+
     otp = generate_otp()
     otp_store[email] = {
         "otp": otp,
@@ -68,36 +79,38 @@ def service_signup_verify_otp(email, otp):
         raise HTTPException(status_code=400, detail="OTP expired.")
     if record["otp"] != otp:
         raise HTTPException(status_code=400, detail="Incorrect OTP.")
-    user_store[email] = {
-        "password": record["pending_password"],
-        "name": record.get("pending_name", "")
-    }
+
+    # ✅ Save to SQLite database (persists across restarts!)
+    db_create_user(
+        email=email,
+        name=record.get("pending_name", ""),
+        hashed_password=record["pending_password"]
+    )
     otp_store.pop(email, None)
     return {"message": "Account created.", "token": create_token(email), "email": email}
+
 
 # ── Login ────────────────────────────────────────────────────────────────────
 
 def service_direct_login(email, password):
-    if email not in user_store:
+    # ✅ Fetch from DB
+    user = db_get_user(email)
+    if not user:
         raise HTTPException(status_code=404, detail="Account not found. Please sign up.")
-    stored = user_store[email]
-    hashed = stored["password"] if isinstance(stored, dict) else stored
-    if not pwd_context.verify(password, hashed):
+    if not pwd_context.verify(password, user["password"]):
         raise HTTPException(status_code=401, detail="Incorrect password.")
-    name = stored["name"] if isinstance(stored, dict) else ""
     return {
         "message": "Login successful.",
         "token": create_token(email),
         "email": email,
-        "name": name
+        "name": user["name"]
     }
 
 def service_login_send_otp(email, password):
-    if email not in user_store:
+    user = db_get_user(email)
+    if not user:
         raise HTTPException(status_code=404, detail="Account not found. Please sign up.")
-    stored = user_store[email]
-    hashed = stored["password"] if isinstance(stored, dict) else stored
-    if not pwd_context.verify(password, hashed):
+    if not pwd_context.verify(password, user["password"]):
         raise HTTPException(status_code=401, detail="Incorrect password.")
     otp = generate_otp()
     otp_store[email] = {"otp": otp, "expires_at": time.time() + 600}
@@ -117,14 +130,14 @@ def service_login_verify_otp(email, otp):
     if record["otp"] != otp:
         raise HTTPException(status_code=400, detail="Incorrect OTP.")
     otp_store.pop(email, None)
-    stored = user_store[email]
-    name = stored["name"] if isinstance(stored, dict) else ""
+    user = db_get_user(email)
     return {
         "message": "Login successful.",
         "token": create_token(email),
         "email": email,
-        "name": name
+        "name": user["name"] if user else ""
     }
+
 
 # ── Resend OTP ───────────────────────────────────────────────────────────────
 
@@ -137,10 +150,12 @@ def service_resend_otp(email):
         raise HTTPException(status_code=500, detail=f"Failed to resend OTP: {str(e)}")
     return {"message": "OTP resent."}
 
+
 # ── Forgot Password ──────────────────────────────────────────────────────────
 
 def service_forgot_send_otp(email):
-    if email not in user_store:
+    # ✅ Check DB
+    if not db_user_exists(email):
         raise HTTPException(status_code=404, detail="No account found with this email.")
     otp = generate_otp()
     otp_store[email] = {"otp": otp, "expires_at": time.time() + 600}
@@ -168,7 +183,8 @@ def service_forgot_verify_otp(email, otp):
     return {"message": "OTP verified.", "reset_token": reset_token}
 
 def service_reset_password(email, reset_token, new_password):
-    if email not in user_store:
+    # ✅ Check DB
+    if not db_user_exists(email):
         raise HTTPException(status_code=404, detail="Account not found.")
     record = reset_token_store.get(email)
     if not record:
@@ -180,11 +196,8 @@ def service_reset_password(email, reset_token, new_password):
         raise HTTPException(status_code=400, detail="Invalid reset token.")
     if len(new_password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
-    stored = user_store[email]
-    name = stored["name"] if isinstance(stored, dict) else ""
-    user_store[email] = {
-        "password": pwd_context.hash(new_password),
-        "name": name
-    }
+
+    # ✅ Update password in DB
+    db_update_password(email, pwd_context.hash(new_password))
     reset_token_store.pop(email, None)
     return {"message": "Password reset successful. You can now log in."}
