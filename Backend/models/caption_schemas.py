@@ -4,6 +4,7 @@ from datetime import datetime
 
 
 class CaptionRequest(BaseModel):
+    business_name: Optional[str] = Field("", example="Blue Tokai Coffee")
     business_type: str = Field(..., example="Cafe")
     target_audience: str = Field(..., example="Students")
     platform: str = Field(..., example="Instagram")
@@ -11,6 +12,8 @@ class CaptionRequest(BaseModel):
     campaign: str = Field(..., example="Monsoon Coffee Combo")
     location: str = Field(..., example="Pune")
     marketing_goal: Optional[str] = Field("Brand Awareness", example="Drive Footfall")
+    offer: Optional[str] = Field(None, example="Coffee + Snack ₹149")
+    additional_notes: Optional[str] = Field(None, example="Focus on students")
     business_id: Optional[str] = "123"  # Mock business ID for saving to DB
 
 

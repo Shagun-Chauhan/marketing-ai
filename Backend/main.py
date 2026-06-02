@@ -23,6 +23,13 @@ app.include_router(caption_router)
 # Include calendar router
 app.include_router(calendar_router)
 
+<<<<<<< HEAD
+=======
+
+@app.get("/")
+def root():
+    return {"message": "Marketing AI Backend Running"}
+>>>>>>> 5c2610bad1aef184f4067e51fc094a7b4095f0ef
 @app.get("/")
 def health():
     return {

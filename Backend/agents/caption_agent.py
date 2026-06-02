@@ -21,11 +21,15 @@ async def process_caption_generation(request: CaptionRequest) -> dict:
         tone=request.tone,
         campaign=request.campaign,
         location=request.location,
-        marketing_goal=request.marketing_goal or "Brand Awareness"
+        marketing_goal=request.marketing_goal or "Brand Awareness",
+        business_name=request.business_name or "",
+        offer=request.offer,
+        additional_notes=request.additional_notes,
     )
 
     # 2. Build business context from user inputs
     business_context = {
+        "business_name": request.business_name or "",
         "business_type": request.business_type,
         "target_audience": request.target_audience,
         "platform": request.platform,

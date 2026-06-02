@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useBusiness } from '../context/BusinessContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -24,17 +25,15 @@ const steps = [
   { id: 4, title: 'Marketing Goals', icon: Target },
   { id: 5, title: 'Platform Prefs', icon: Share2 },
   { id: 6, title: 'Market Insights', icon: TrendingDown },
-  { id: 7, title: 'Design & Style', icon: Palette },
-  { id: 8, title: 'Local & Festival', icon: CalendarDays },
-  { id: 9, title: 'AI Preferences', icon: Bot },
 ];
 
 const BusinessProfile = () => {
   const { businessData, updateBusinessData } = useBusiness();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 9));
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 6));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const handleInputChange = (e) => {
@@ -55,7 +54,7 @@ const BusinessProfile = () => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsSaving(false);
-    alert('Business Profile saved successfully!');
+    navigate('/dashboard');
   };
 
   const renderStep = () => {
@@ -345,204 +344,33 @@ const BusinessProfile = () => {
 
       case 6:
         return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-400">Competitor Names</label>
-                <input name="competitors" value={businessData.competitors} onChange={handleInputChange} className="glass-input w-full" placeholder="e.g. Starbucks, Third Wave" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-400">Competitor Social Links</label>
-                <input name="competitorLinks" value={businessData.competitorLinks} onChange={handleInputChange} className="glass-input w-full" placeholder="Optional" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-400">What You Like About Competitors</label>
-              <textarea name="competitorLikes" value={businessData.competitorLikes} onChange={handleInputChange} className="glass-input w-full h-24 resize-none" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-400">What Makes Your Business Unique (USP)</label>
-              <textarea name="usp" value={businessData.usp} onChange={handleInputChange} className="glass-input w-full h-24 resize-none" />
-            </div>
-          </div>
-        );
-
-      case 7:
-        return (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                <label className="text-sm font-semibold text-gray-400">Preferred Brand Colors</label>
-                <div className="flex gap-4">
-                  {businessData.brandColors.map((color, i) => (
-                    <div key={i} className="group relative">
-                      <input 
-                        type="color" 
-                        value={color} 
-                        onChange={(e) => {
-                          const newColors = [...businessData.brandColors];
-                          newColors[i] = e.target.value;
-                          updateBusinessData({ brandColors: newColors });
-                        }}
-                        className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 p-1 cursor-pointer overflow-hidden"
-                      />
-                      <div className="absolute top-0 left-0 w-full h-full rounded-2xl pointer-events-none border-2 border-white/20" style={{ backgroundColor: color }} />
-                    </div>
-                  ))}
-                  <button className="w-16 h-16 rounded-2xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-gray-500 hover:text-white hover:border-white transition-all">
-                    +
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <label className="text-sm font-semibold text-gray-400">Preferred Fonts</label>
-                <div className="flex flex-wrap gap-2">
-                  {['Poppins', 'Inter', 'Playfair Display', 'Montserrat', 'Roboto'].map(opt => (
-                    <button
-                      key={opt}
-                      onClick={() => handleMultiSelect('fonts', opt)}
-                      className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
-                        businessData.fonts.includes(opt)
-                          ? 'bg-accent-start border-accent-start text-white'
-                          : 'bg-white/5 border-white/10 text-gray-400'
-                      }`}
-                      style={{ fontFamily: opt }}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <label className="text-sm font-semibold text-gray-400">Visual Style</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['Modern', 'Minimal', 'Cozy', 'Luxury', 'Neon', 'Corporate', 'Vintage', 'Futuristic'].map(opt => (
-                  <div 
-                    key={opt}
-                    onClick={() => handleMultiSelect('visualStyle', opt)}
-                    className={`p-4 rounded-2xl border text-center cursor-pointer transition-all ${
-                      businessData.visualStyle.includes(opt)
-                        ? 'bg-accent-start/20 border-accent-start text-white'
-                        : 'bg-white/5 border-white/10 text-gray-400'
-                    }`}
-                  >
-                    <span className="text-sm font-bold uppercase tracking-wider">{opt}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 8:
-        return (
-          <div className="space-y-8">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-400">Target City/Region</label>
-              <input name="targetCity" value={businessData.targetCity} onChange={handleInputChange} className="glass-input w-full" placeholder="e.g. Maharashtra, India" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold">Festival Campaigns</h4>
-                  <p className="text-xs text-gray-500">Interested in seasonal AI content?</p>
-                </div>
-                <button 
-                  onClick={() => updateBusinessData({ festivalInterest: !businessData.festivalInterest })}
-                  className={`w-12 h-6 rounded-full transition-all relative ${businessData.festivalInterest ? 'bg-accent-start' : 'bg-gray-700'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${businessData.festivalInterest ? 'left-7' : 'left-1'}`} />
-                </button>
-              </div>
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold">Seasonal Interest</h4>
-                  <p className="text-xs text-gray-500">Auto-suggest seasonal trends?</p>
-                </div>
-                <button 
-                  onClick={() => updateBusinessData({ seasonalInterest: !businessData.seasonalInterest })}
-                  className={`w-12 h-6 rounded-full transition-all relative ${businessData.seasonalInterest ? 'bg-accent-start' : 'bg-gray-700'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${businessData.seasonalInterest ? 'left-7' : 'left-1'}`} />
-                </button>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <label className="text-sm font-semibold text-gray-400">Preferred Festivals</label>
-              <div className="flex flex-wrap gap-3">
-                {['Diwali', 'Holi', 'Christmas', 'New Year', 'IPL', 'Valentine’s Day', 'Local Events'].map(opt => (
-                  <button
-                    key={opt}
-                    onClick={() => handleMultiSelect('preferredFestivals', opt)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                      businessData.preferredFestivals.includes(opt)
-                        ? 'bg-accent-start border-accent-start text-white'
-                        : 'bg-white/5 border-white/10 text-gray-400'
-                    }`}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 9:
-        return (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-semibold text-gray-400">AI Creativity Level</label>
-                    <span className="text-accent-start font-bold">{businessData.creativityLevel}%</span>
-                  </div>
-                  <input type="range" name="creativityLevel" value={businessData.creativityLevel} onChange={handleInputChange} className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-start" />
-                </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-semibold text-gray-400">Hashtag Density</label>
-                    <span className="text-accent-start font-bold">{businessData.hashtagDensity}%</span>
-                  </div>
-                  <input type="range" name="hashtagDensity" value={businessData.hashtagDensity} onChange={handleInputChange} className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-start" />
-                </div>
-              </div>
-              <div className="space-y-8">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-400">Caption Length Preference</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {['Short', 'Medium', 'Long'].map(opt => (
-                      <button
-                        key={opt}
-                        onClick={() => updateBusinessData({ captionLength: opt })}
-                        className={`p-3 rounded-xl border text-xs font-bold transition-all ${
-                          businessData.captionLength === opt
-                            ? 'bg-accent-start border-accent-start text-white'
-                            : 'bg-white/5 border-white/10 text-gray-400'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
+                  <label className="text-sm font-semibold text-gray-400">Competitor Names</label>
+                  <input name="competitors" value={businessData.competitors} onChange={handleInputChange} className="glass-input w-full" placeholder="e.g. Starbucks, Third Wave" />
                 </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-semibold text-gray-400">Tone Strictness</label>
-                    <span className="text-accent-start font-bold">{businessData.toneStrictness}%</span>
-                  </div>
-                  <input type="range" name="toneStrictness" value={businessData.toneStrictness} onChange={handleInputChange} className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-start" />
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-400">Competitor Social Links</label>
+                  <input name="competitorLinks" value={businessData.competitorLinks} onChange={handleInputChange} className="glass-input w-full" placeholder="Optional" />
                 </div>
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-400">What You Like About Competitors</label>
+                <textarea name="competitorLikes" value={businessData.competitorLikes} onChange={handleInputChange} className="glass-input w-full h-24 resize-none" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-400">What Makes Your Business Unique (USP)</label>
+                <textarea name="usp" value={businessData.usp} onChange={handleInputChange} className="glass-input w-full h-24 resize-none" />
+              </div>
             </div>
-            
+
             <div className="p-8 rounded-3xl bg-accent-start/10 border border-accent-start/20 flex flex-col items-center text-center">
               <Bot size={48} className="text-accent-start mb-4" />
-              <h3 className="text-xl font-bold mb-2">You're all set!</h3>
+              <h3 className="text-xl font-bold mb-2">You're almost there!</h3>
               <p className="text-gray-400 text-sm max-w-md mb-6">
-                Our AI agents will use these preferences to generate highly personalized content for {businessData.businessName || 'your brand'}.
+                Complete your profile to unlock full AI potential and start growing your brand.
               </p>
               <button 
                 onClick={handleSave}
@@ -553,7 +381,7 @@ const BusinessProfile = () => {
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Save size={20} />
+                    <CheckCircle2 size={20} />
                     Complete Profile
                   </>
                 )}
@@ -572,7 +400,7 @@ const BusinessProfile = () => {
       <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h2 className="text-3xl font-bold mb-2">Business Profile</h2>
-          <p className="text-gray-400">Step {currentStep} of 9: {steps.find(s => s.id === currentStep).title}</p>
+          <p className="text-gray-400">Step {currentStep} of 6: {steps.find(s => s.id === currentStep).title}</p>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
           {steps.map((step) => (
@@ -628,7 +456,7 @@ const BusinessProfile = () => {
             <button className="btn-secondary hidden md:block">
               Save Draft
             </button>
-            {currentStep < 9 ? (
+            {currentStep < 6 ? (
               <button 
                 onClick={nextStep}
                 className="btn-primary flex items-center gap-2"
