@@ -1,50 +1,32 @@
-import os
-import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 
-# Import schemas and services
-from models.schemas import (
-    AnalysisRequest, 
-    FullAnalysisResponse, 
-    SingleCompetitorResult, 
-    ScrapedData,
-    PageSpeedData,
-    SEOScore
-)
-from services.website_scraper import scrape_website
-from services.seo_analyzer import analyze_seo
-from services.keyword_extractor import extract_keywords
-from services.pagespeed_service import fetch_pagespeed_data
-from services.ai_analyzer import analyze_swot_with_evidence
-from services.content_classifier import classify_content_intent
-from services.frequency_analyzer import analyze_frequency_and_patterns
-from services.confidence_scorer import compute_confidence_score
-from services.trend_detector import detect_trend_gaps
+from routes.auth_routes import router as auth_router
 from routes.caption_routes import router as caption_router
+from routes.calendar_routes import router as calendar_router
 
-# Load environment variables
-load_dotenv()
+app = FastAPI()
 
-app = FastAPI(
-    title="BrandPilot AI Competitor Analysis Engine",
-    description="Backend service running advanced web scraping, SEO diagnostics, and PageSpeed metrics.",
-    version="1.0.0"
-)
-
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for dev/prototyping
+  allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include caption generator router
+app.include_router(auth_router)
 app.include_router(caption_router)
+# Include calendar router
+app.include_router(calendar_router)
 
+
+@app.get("/")
+def root():
+    return {"message": "Marketing AI Backend Running"}
 @app.get("/")
 def health():
     return {

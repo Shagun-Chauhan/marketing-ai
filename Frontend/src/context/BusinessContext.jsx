@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState } from 'react';
 
 const BusinessContext = createContext();
 
+export { BusinessContext };
+
 export const useBusiness = () => {
   const context = useContext(BusinessContext);
   if (!context) {

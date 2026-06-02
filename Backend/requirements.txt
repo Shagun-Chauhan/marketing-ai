@@ -10,3 +10,9 @@ pydantic
 pytrends
 emoji
 motor
+groq
+passlib[bcrypt]
+PyJWT
+email-validator
+pydantic[email]
+reportlab

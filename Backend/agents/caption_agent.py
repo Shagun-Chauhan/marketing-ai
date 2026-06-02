@@ -1,19 +1,17 @@
 import os
+import logging
 from datetime import datetime
-from motor.motor_asyncio import AsyncIOMotorClient
 from services.gemini_caption_service import generate_caption_with_gemini
+from services.caption_storage_service import save_generated_ad_content
 from models.caption_schemas import CaptionRequest
 
-# Use a default MongoDB URI if not provided
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-client = AsyncIOMotorClient(MONGO_URI)
-db = client.marketing_ai
-captions_collection = db.captions
+logger = logging.getLogger("caption_agent")
+
 
 async def process_caption_generation(request: CaptionRequest) -> dict:
     """
     Agent to handle the flow of generating captions with advertisement
-    post guidance using Gemini and saving to MongoDB.
+    blueprint using Gemini and saving to MongoDB Atlas.
     """
     # 1. Generate via Gemini
     generated_data = generate_caption_with_gemini(
@@ -23,32 +21,51 @@ async def process_caption_generation(request: CaptionRequest) -> dict:
         tone=request.tone,
         campaign=request.campaign,
         location=request.location,
-        marketing_goal=request.marketing_goal or "Brand Awareness"
+        marketing_goal=request.marketing_goal or "Brand Awareness",
+        business_name=request.business_name or "",
+        offer=request.offer,
+        additional_notes=request.additional_notes,
     )
-    
-    # 2. Save each generated caption variant to MongoDB
+
+    # 2. Build business context from user inputs
+    business_context = {
+        "business_name": request.business_name or "",
+        "business_type": request.business_type,
+        "target_audience": request.target_audience,
+        "platform": request.platform,
+        "tone": request.tone,
+        "location": request.location,
+        "marketing_goal": request.marketing_goal or "Brand Awareness",
+    }
+
+    # 3. Save each generated caption variant to MongoDB Atlas (advertisement_content collection)
     captions = generated_data.get("captions", [])
-    
+
     if not captions:
         return {"captions": []}
-        
-    documents = []
+
     for cap in captions:
-        documents.append({
-            "business_id": request.business_id or "default_business",
-            "platform": request.platform,
-            "campaign": request.campaign,
-            "marketing_goal": request.marketing_goal or "Brand Awareness",
+        generated_content = {
             "caption": cap.get("caption", ""),
             "cta": cap.get("cta", ""),
             "hashtags": cap.get("hashtags", []),
-            "post_guidance": cap.get("post_guidance", {}),
-            "created_at": datetime.utcnow()
-        })
-        
-    try:
-        await captions_collection.insert_many(documents)
-    except Exception as e:
-        print(f"Error saving to MongoDB: {e}")
-        
+            "advertisement_blueprint": cap.get("advertisement_blueprint", {}),
+            "why_this_will_work": cap.get("why_this_will_work", []),
+            "poster_layout": cap.get("poster_layout", {}),
+        }
+
+        try:
+            await save_generated_ad_content(
+                business_context=business_context,
+                campaign=request.campaign,
+                generated_content=generated_content,
+            )
+        except ConnectionError as e:
+            logger.error("MongoDB Atlas connection failed: %s", e)
+            # Propagate so the route returns a proper 503
+            raise
+        except Exception as e:
+            logger.error("Error saving to MongoDB Atlas: %s", e)
+
     return generated_data
+
