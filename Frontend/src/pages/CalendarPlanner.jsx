@@ -23,6 +23,7 @@ const CalendarPlanner = () => {
   const [error, setError] = useState('');
 
   const generateCalendar = async () => {
+    setCalendarData([]); // Ensure no persistence of old plans
     setLoading(true);
     setError('');
     try {
@@ -49,30 +50,43 @@ const CalendarPlanner = () => {
     }
   };
 
-  const filteredData = calendarData.filter(item => {
-    const matchPlatform = filterPlatform === 'All' || item.platform === filterPlatform;
-    const matchType = filterType === 'All' || item.content_type === filterType;
-    const matchCategory = filterCategory === 'All' || item.campaign_category === filterCategory;
-    return matchPlatform && matchType && matchCategory;
-  });
+  const handleDownloadPDF = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('http://localhost:8000/api/calendar/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          duration: duration,
+          business_data: businessData
+        }),
+      });
 
-  const exportToCSV = () => {
-    const headers = ["Date", "Platform", "Type", "Title", "Description", "Purpose", "Time", "CTA", "Priority", "Category"];
-    const rows = filteredData.map(item => [
-      item.date, 
-      item.platform, 
-      item.content_type, 
-      item.title, 
-      `"${item.description}"`, 
-      item.purpose,
-      item.recommended_time,
-      item.cta,
-      item.priority,
-      item.campaign_category
-    ]);
-    let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
-    window.open(encodeURI(csvContent));
+      if (!response.ok) throw new Error('Failed to generate PDF');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `content_planner_${duration}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      setError('Could not download PDF. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const filteredData = calendarData.filter(item => 
+    (filterPlatform === 'All' || item.platform === filterPlatform) &&
+    (filterType === 'All' || item.content_type === filterType) &&
+    (filterCategory === 'All' || item.campaign_category === filterCategory)
+  );
 
   const getPriorityColor = (priority) => {
     switch(priority) {
@@ -122,7 +136,7 @@ const CalendarPlanner = () => {
             className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2 rounded-xl font-semibold hover:shadow-blue-500/20 hover:shadow-2xl transition disabled:opacity-50"
           >
             {loading ? <RefreshCw className="animate-spin" size={18} /> : <Send size={18} />}
-            Generate Strategy
+            {calendarData.length > 0 ? 'Regenerate Strategy' : 'Generate Strategy'}
           </button>
         </div>
       </div>
@@ -177,8 +191,11 @@ const CalendarPlanner = () => {
             <option value="Festival">Festival</option>
             <option value="Seasonal">Seasonal</option>
           </select>
-          <button onClick={exportToCSV} className="ml-auto flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
-            <Download size={16} /> Export CSV
+          <button onClick={generateCalendar} disabled={loading} className="ml-auto flex items-center gap-2 text-sm text-gray-400 hover:text-white transition disabled:opacity-50">
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> Regenerate Plan
+          </button>
+          <button onClick={handleDownloadPDF} disabled={loading} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition disabled:opacity-50">
+            <Download size={16} /> Download PDF
           </button>
         </div>
       )}
@@ -211,7 +228,18 @@ const CalendarPlanner = () => {
               </div>
               
               <h3 className="text-lg font-bold mb-2 group-hover:text-blue-300 transition">{day.title}</h3>
-              <p className="text-sm text-gray-400 line-clamp-3 mb-4">{day.description}</p>
+              
+              <div className="space-y-3 mb-4">
+                {day.objective && (
+                  <p className="text-sm text-blue-300 font-medium">Objective: {day.objective}</p>
+                )}
+                <p className="text-sm text-gray-400 line-clamp-4">
+                  <span className="font-semibold text-gray-300">Tasks:</span> {day.tasks || day.description}
+                </p>
+                {day.milestones && (
+                  <p className="text-xs text-yellow-500/80 italic">Milestone: {day.milestones}</p>
+                )}
+              </div>
               
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-black/20 p-2 rounded-lg">

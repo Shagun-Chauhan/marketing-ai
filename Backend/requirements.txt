@@ -15,3 +15,4 @@ passlib[bcrypt]
 PyJWT
 email-validator
 pydantic[email]
+reportlab
