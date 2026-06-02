@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import API_URL from '../config/api';
 import { useBusiness } from '../context/BusinessContext';
 import { 
   Search, 
@@ -142,7 +143,7 @@ const CompetitorAnalysis = () => {
         user_brand_tone: businessData.tone ? businessData.tone[0] : null
       };
 
-      const response = await axios.post('http://127.0.0.1:8000/api/analyze-competitor', payload);
+      const response = await axios.post(`${API_URL}/api/analyze-competitor`, payload);
       setAnalysisResult(response.data);
       setActiveTab('side-by-side');
     } catch (err) {

@@ -34,6 +34,7 @@ import {
 import { useBusiness } from '../context/BusinessContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_URL from '../config/api';
 
 const API_BASE = 'http://127.0.0.1:8000/api/caption';
 
@@ -164,7 +165,8 @@ const CaptionsHashtags = () => {
     };
 
     try {
-      const response = await axios.post(`${API_BASE}/generate`, payload);
+//       const response = await axios.post(`${API_BASE}/generate`, formData);
+      const response = await axios.post(`${API_URL}/api/caption/generate`, formData);
       if (response.data && response.data.captions) {
         setResults(response.data.captions);
         setActiveTab(0);
