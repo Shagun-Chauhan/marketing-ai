@@ -165,10 +165,7 @@ const CaptionsHashtags = () => {
     };
 
     try {
-<<<<<<< HEAD
-=======
 //       const response = await axios.post(`${API_BASE}/generate`, formData);
->>>>>>> 5c2610bad1aef184f4067e51fc094a7b4095f0ef
       const response = await axios.post(`${API_URL}/api/caption/generate`, formData);
       if (response.data && response.data.captions) {
         setResults(response.data.captions);

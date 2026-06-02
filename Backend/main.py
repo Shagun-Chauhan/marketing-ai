@@ -33,8 +33,8 @@ def health():
 
 
 
-@app.post("/api/analyze-competitor", response_model=FullAnalysisResponse)
-async def analyze_competitor_endpoint(request: AnalysisRequest):
+@app.post ("/api/analyze-competitor") 
+async def analyze_competitor_endpoint(request):
     """
     Main pipeline to run structured competitor analysis.
     Handles multiple competitors side-by-side.
