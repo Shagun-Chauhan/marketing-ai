@@ -24,15 +24,22 @@ import {
   CheckCircle2,
   ArrowRight,
   FileText,
-  Layers
+  Layers,
+  Building2,
+  Users2,
+  Share2,
+  Smile,
+  AlertTriangle
 } from 'lucide-react';
 import { useBusiness } from '../context/BusinessContext';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_BASE = 'http://127.0.0.1:8000/api/caption';
 
 const CaptionsHashtags = () => {
   const { businessData } = useBusiness();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,16 +51,34 @@ const CaptionsHashtags = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [viewingHistory, setViewingHistory] = useState(false);
 
-  // Form state
+  // Campaign-only form state (business fields come from context)
   const [formData, setFormData] = useState({
-    business_type: businessData?.industry || 'Cafe',
-    target_audience: businessData?.audienceType?.[0] || 'Students',
-    platform: businessData?.primaryPlatform || 'Instagram',
-    tone: businessData?.tone?.[0] || 'Casual',
-    campaign: businessData?.campaignDescription || 'Monsoon Special Combo',
-    location: businessData?.location || 'Pune',
-    marketing_goal: 'Brand Awareness',
+    campaign: '',
+    offer: '',
+    additional_notes: '',
   });
+
+  // Derive business profile summary from context
+  const profileSummary = {
+    businessName: businessData?.businessName || '',
+    businessType: businessData?.industry || '',
+    audience: Array.isArray(businessData?.audienceType) 
+      ? businessData.audienceType.join(', ') 
+      : businessData?.audienceType || '',
+    platform: businessData?.primaryPlatform || '',
+    location: businessData?.location || '',
+    tone: Array.isArray(businessData?.tone) 
+      ? businessData.tone.join(', ') 
+      : businessData?.tone || '',
+    goal: businessData?.primaryGoal || '',
+  };
+
+  // Check if profile has minimum required data
+  const isProfileReady = Boolean(
+    profileSummary.businessType && 
+    profileSummary.platform && 
+    profileSummary.audience
+  );
 
   // Fetch history on mount
   useEffect(() => {
@@ -67,7 +92,6 @@ const CaptionsHashtags = () => {
       setHistory(res.data || []);
     } catch (err) {
       console.error('Failed to fetch history', err);
-      // Silently handle — history panel will show empty state
       if (err.response?.status === 503) {
         console.warn('MongoDB Atlas connection issue — history unavailable');
       }
@@ -82,7 +106,6 @@ const CaptionsHashtags = () => {
       const res = await axios.get(`${API_BASE}/history/${docId}`);
       const doc = res.data;
       if (doc && doc.generated_content) {
-        // Convert single saved document back to the results display format
         setResults([{
           caption: doc.generated_content.caption,
           cta: doc.generated_content.cta,
@@ -113,15 +136,38 @@ const CaptionsHashtags = () => {
   };
 
   const generateCaptions = async () => {
+    if (!isProfileReady) {
+      alert('Please complete your Business Profile first before generating advertisements.');
+      return;
+    }
+    if (!formData.campaign.trim()) {
+      alert('Please enter a Campaign Name.');
+      return;
+    }
+
     setLoading(true);
     setResults(null);
     setViewingHistory(false);
+
+    // Merge business profile data with campaign-specific data
+    const payload = {
+      business_name: profileSummary.businessName,
+      business_type: profileSummary.businessType,
+      target_audience: profileSummary.audience,
+      platform: profileSummary.platform || 'Instagram',
+      tone: Array.isArray(businessData?.tone) ? businessData.tone[0] : businessData?.tone || 'Casual',
+      campaign: formData.campaign,
+      location: profileSummary.location,
+      marketing_goal: profileSummary.goal || 'Brand Awareness',
+      offer: formData.offer || null,
+      additional_notes: formData.additional_notes || null,
+    };
+
     try {
-      const response = await axios.post(`${API_BASE}/generate`, formData);
+      const response = await axios.post(`${API_BASE}/generate`, payload);
       if (response.data && response.data.captions) {
         setResults(response.data.captions);
         setActiveTab(0);
-        // Refresh history after new generation
         fetchHistory();
       }
     } catch (error) {
@@ -175,8 +221,125 @@ const CaptionsHashtags = () => {
     }
   };
 
+  // Business Context summary items for the card
+  const contextItems = [
+    { icon: Building2, label: 'Business', value: profileSummary.businessName || profileSummary.businessType, color: 'violet' },
+    { icon: Users2, label: 'Audience', value: profileSummary.audience, color: 'blue' },
+    { icon: Share2, label: 'Platform', value: profileSummary.platform, color: 'cyan' },
+    { icon: MapPin, label: 'Location', value: profileSummary.location, color: 'emerald' },
+    { icon: Smile, label: 'Tone', value: profileSummary.tone, color: 'pink' },
+    { icon: Target, label: 'Goal', value: profileSummary.goal, color: 'orange' },
+  ];
+
+  const colorMap = {
+    violet: { bg: 'rgba(139, 92, 246, 0.12)', border: 'rgba(139, 92, 246, 0.25)', text: '#a78bfa', iconBg: 'rgba(139, 92, 246, 0.2)' },
+    blue: { bg: 'rgba(59, 130, 246, 0.12)', border: 'rgba(59, 130, 246, 0.25)', text: '#60a5fa', iconBg: 'rgba(59, 130, 246, 0.2)' },
+    cyan: { bg: 'rgba(6, 182, 212, 0.12)', border: 'rgba(6, 182, 212, 0.25)', text: '#22d3ee', iconBg: 'rgba(6, 182, 212, 0.2)' },
+    emerald: { bg: 'rgba(16, 185, 129, 0.12)', border: 'rgba(16, 185, 129, 0.25)', text: '#34d399', iconBg: 'rgba(16, 185, 129, 0.2)' },
+    pink: { bg: 'rgba(236, 72, 153, 0.12)', border: 'rgba(236, 72, 153, 0.25)', text: '#f472b6', iconBg: 'rgba(236, 72, 153, 0.2)' },
+    orange: { bg: 'rgba(249, 115, 22, 0.12)', border: 'rgba(249, 115, 22, 0.25)', text: '#fb923c', iconBg: 'rgba(249, 115, 22, 0.2)' },
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-20">
+
+      {/* ═══════════════════════════════════════════════════════════════
+          BUSINESS CONTEXT CARD (Auto-loaded, Read-Only)
+      ═══════════════════════════════════════════════════════════════ */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center text-violet-400">
+            <Building2 size={24} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold">Business Context</h2>
+            <p className="text-sm text-gray-500">Auto-loaded from your Business Profile — read only</p>
+          </div>
+        </div>
+
+        {!isProfileReady ? (
+          /* Profile not filled — show alert */
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card p-6 border-amber-500/30"
+            style={{ borderColor: 'rgba(245, 158, 11, 0.3)' }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                <AlertTriangle size={24} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-amber-300">Business Profile Required</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Please complete your Business Profile first. The Caption Module needs your business information to generate personalized advertisements.
+                </p>
+                <button
+                  onClick={() => navigate('/business-profile')}
+                  className="mt-4 px-6 py-2.5 bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-lg text-sm font-bold hover:bg-amber-500/30 transition-all flex items-center gap-2"
+                >
+                  <Building2 size={16} />
+                  Go to Business Profile
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          /* Profile filled — show context summary */
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card p-6 border-violet-500/20"
+          >
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {contextItems.map((item, idx) => {
+                const colors = colorMap[item.color];
+                const IconComp = item.icon;
+                return (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.06 }}
+                    className="rounded-xl p-3.5 border transition-all"
+                    style={{
+                      background: colors.bg,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: colors.iconBg }}
+                      >
+                        <IconComp size={15} style={{ color: colors.text }} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{item.label}</p>
+                        <p className="text-sm font-bold truncate" style={{ color: colors.text }}>
+                          {item.value || '—'}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+              <p className="text-[11px] text-gray-600 font-semibold uppercase tracking-wider">
+                ✓ Profile data auto-applied to all generations
+              </p>
+              <button
+                onClick={() => navigate('/business-profile')}
+                className="text-xs font-bold text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-1"
+              >
+                Edit Profile <ArrowRight size={12} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </section>
 
       {/* ═══════════════════════════════════════════════════════════════
           GENERATION HISTORY PANEL
@@ -265,7 +428,7 @@ const CaptionsHashtags = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          INPUT FORM
+          CAMPAIGN INPUT FORM (Only campaign-specific fields)
       ═══════════════════════════════════════════════════════════════ */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
@@ -273,65 +436,75 @@ const CaptionsHashtags = () => {
             <Sparkles size={24} />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">Generate Advertisement Content</h2>
-            <p className="text-sm text-gray-500">Tell us about your business — we'll create a ready-to-use ad plan</p>
+            <h2 className="text-2xl font-bold">Campaign Information</h2>
+            <p className="text-sm text-gray-500">Enter your campaign details — business context is auto-applied</p>
           </div>
         </div>
 
-        <div className="glass-card p-6 border-accent-start/20 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="glass-card p-6 border-accent-start/20 space-y-5">
+          {/* Campaign Name */}
           <div className="space-y-2">
-             <label className="text-sm font-semibold text-gray-400">Campaign/Topic</label>
-             <input type="text" name="campaign" value={formData.campaign} onChange={handleInputChange} className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start" />
+            <label className="text-sm font-semibold text-gray-400 flex items-center gap-2">
+              <Megaphone size={14} className="text-violet-400" />
+              Campaign Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              name="campaign"
+              value={formData.campaign}
+              onChange={handleInputChange}
+              placeholder='e.g., "Monsoon Special Combo", "Summer Sale 2024"'
+              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start transition-colors"
+            />
           </div>
+
+          {/* Special Offer */}
           <div className="space-y-2">
-             <label className="text-sm font-semibold text-gray-400">Platform</label>
-             <select name="platform" value={formData.platform} onChange={handleInputChange} className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start">
-               <option value="Instagram">Instagram</option>
-               <option value="LinkedIn">LinkedIn</option>
-               <option value="Facebook">Facebook</option>
-               <option value="Twitter">Twitter</option>
-             </select>
+            <label className="text-sm font-semibold text-gray-400 flex items-center gap-2">
+              <Target size={14} className="text-emerald-400" />
+              Special Offer <span className="text-gray-600 font-normal">(Optional)</span>
+            </label>
+            <input
+              type="text"
+              name="offer"
+              value={formData.offer}
+              onChange={handleInputChange}
+              placeholder='e.g., "Coffee + Snack ₹149", "Buy 1 Get 1 Free"'
+              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start transition-colors"
+            />
           </div>
+
+          {/* Additional Notes */}
           <div className="space-y-2">
-             <label className="text-sm font-semibold text-gray-400">Tone</label>
-             <select name="tone" value={formData.tone} onChange={handleInputChange} className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start">
-               <option value="Casual">Casual</option>
-               <option value="Professional">Professional</option>
-               <option value="Funny">Funny</option>
-               <option value="Luxury">Luxury</option>
-               <option value="Minimal">Minimal</option>
-             </select>
-          </div>
-          <div className="space-y-2">
-             <label className="text-sm font-semibold text-gray-400">Target Audience</label>
-             <input type="text" name="target_audience" value={formData.target_audience} onChange={handleInputChange} className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start" />
-          </div>
-          <div className="space-y-2">
-             <label className="text-sm font-semibold text-gray-400">Business Type</label>
-             <input type="text" name="business_type" value={formData.business_type} onChange={handleInputChange} className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start" />
-          </div>
-          <div className="space-y-2">
-             <label className="text-sm font-semibold text-gray-400">Location</label>
-             <input type="text" name="location" value={formData.location} onChange={handleInputChange} className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start" />
-          </div>
-          <div className="md:col-span-2 space-y-2">
-             <label className="text-sm font-semibold text-gray-400">Marketing Goal</label>
-             <select name="marketing_goal" value={formData.marketing_goal} onChange={handleInputChange} className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start">
-               <option value="Brand Awareness">Brand Awareness</option>
-               <option value="Drive Footfall">Drive Footfall</option>
-               <option value="Product Launch">Product Launch</option>
-               <option value="Seasonal Offer">Seasonal Offer</option>
-               <option value="Lead Generation">Lead Generation</option>
-               <option value="Customer Retention">Customer Retention</option>
-               <option value="Event Promotion">Event Promotion</option>
-             </select>
+            <label className="text-sm font-semibold text-gray-400 flex items-center gap-2">
+              <FileText size={14} className="text-blue-400" />
+              Additional Notes <span className="text-gray-600 font-normal">(Optional)</span>
+            </label>
+            <textarea
+              name="additional_notes"
+              value={formData.additional_notes}
+              onChange={handleInputChange}
+              rows={3}
+              placeholder='e.g., "Focus on students", "Highlight monsoon vibes", "Use Hindi tagline"'
+              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-accent-start transition-colors resize-none"
+              style={{ fontFamily: 'inherit' }}
+            />
           </div>
           
-          <div className="md:col-span-2 mt-4">
-             <button onClick={generateCaptions} disabled={loading} className="w-full btn-primary flex items-center justify-center gap-2 py-3 rounded-lg text-lg font-bold">
-               {loading ? <Loader2 className="animate-spin" size={24} /> : <Sparkles size={24} />}
-               {loading ? 'Creating Your Ad Plan...' : 'Generate Ad Content ✨'}
-             </button>
+          {/* Generate Button */}
+          <div className="pt-2">
+            <button
+              onClick={generateCaptions}
+              disabled={loading || !isProfileReady}
+              className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-lg font-bold transition-all ${
+                !isProfileReady
+                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed border border-gray-700'
+                  : 'btn-primary'
+              }`}
+            >
+              {loading ? <Loader2 className="animate-spin" size={24} /> : <Sparkles size={24} />}
+              {loading ? 'Creating Your Ad Plan...' : !isProfileReady ? 'Complete Business Profile First' : 'Generate Advertisement ✨'}
+            </button>
           </div>
         </div>
       </section>
@@ -705,7 +878,7 @@ const CaptionsHashtags = () => {
         <div>
           <h4 className="text-lg font-bold">Pro-Tip from Ad Strategist</h4>
           <p className="text-gray-400 text-sm">
-            Simple, clear ads with a strong offer and a single call-to-action convert 3× more than cluttered designs. We build your ad blueprint for {formData.platform} — just follow the steps!
+            Simple, clear ads with a strong offer and a single call-to-action convert 3× more than cluttered designs. We build your ad blueprint for {profileSummary.platform || 'your platform'} — just follow the steps!
           </p>
         </div>
       </section>

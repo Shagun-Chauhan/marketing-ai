@@ -50,7 +50,10 @@ def generate_caption_with_gemini(
     tone: str,
     campaign: str,
     location: str,
-    marketing_goal: str = "Brand Awareness"
+    marketing_goal: str = "Brand Awareness",
+    business_name: str = "",
+    offer: str = None,
+    additional_notes: str = None,
 ) -> dict:
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
@@ -85,8 +88,19 @@ CRITICAL RULES:
 
 Output a JSON object with an array of 'captions'."""
 
+    # Build optional context lines
+    optional_lines = []
+    if business_name:
+        optional_lines.append(f"Business Name: {business_name}")
+    if offer:
+        optional_lines.append(f"Special Offer: {offer}")
+    if additional_notes:
+        optional_lines.append(f"Additional Notes: {additional_notes}")
+    optional_block = "\n".join(optional_lines)
+
     user_prompt = f"""Generate 3 different advertisement ideas for this business:
 
+{f"Business Name: {business_name}" if business_name else ""}
 Business Type: {business_type}
 Target Audience: {target_audience}
 Platform: {platform}
@@ -94,6 +108,8 @@ Tone: {tone}
 Campaign/Topic: {campaign}
 Location: {location}
 Marketing Goal: {marketing_goal}
+{f"Special Offer: {offer}" if offer else ""}
+{f"Additional Notes: {additional_notes}" if additional_notes else ""}
 
 {platform_tips}
 
